@@ -8,9 +8,11 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/url"
 	"os"
-    "net/url"
 
 	"github.com/ChimeraCoder/anaconda"
 )
@@ -20,18 +22,38 @@ func Version() string {
 	return "0.0.1"
 }
 
+// Structure for our Config
+type Config struct {
+	ConsumerKey    string
+	ConsumerSecret string
+	AccessToken    string
+	AccessSecret   string
+}
+
+// Builds our config struct
+func getConfig() Config {
+
+	file, _ := os.Open("config.json")
+	contents, _ := ioutil.ReadAll(file)
+
+	var config Config
+	json.Unmarshal(contents, &config)
+
+	return config
+}
 
 // main application
 func main() {
-    anaconda.SetConsumerKey("US55QyDCABM9jjOYG4q4IThde")
-    anaconda.SetConsumerSecret("xujBz77BlHgkQ0L8ns9WPPiSCL2ixGBd5nx2Timlo8hMO2ml11")
-    api := anaconda.NewTwitterApi("8820492-ru3XP6qzsDIevjbg0YbU2OeBw3kj6P431ixesFhSOG", "Aqh0fmAlZeFUlRWkxzjizkEAieLsCGfkFhKZqgqCpcmBb")
+	config := getConfig()
+	anaconda.SetConsumerKey(config.ConsumerKey)
+	anaconda.SetConsumerSecret(config.ConsumerSecret)
+	api := anaconda.NewTwitterApi(config.AccessToken, config.AccessSecret)
 	arg := os.Args[1:]
-    v := url.Values{}
-    v.Set("from", string(arg[0]))
-    v.Set("count", "1")
-    searchResult, _ := api.GetSearch("", v)
-    for _ , tweet := range searchResult {
-        fmt.Println(tweet.Text)
-    }   
+	v := url.Values{}
+	v.Set("from", string(arg[0]))
+	v.Set("count", "1")
+	searchResult, _ := api.GetSearch("", v)
+	for _, tweet := range searchResult {
+		fmt.Println(tweet.Text)
+	}
 }
