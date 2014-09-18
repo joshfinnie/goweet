@@ -9,8 +9,8 @@ package main
 
 import (
 	"fmt"
+    	"net/url"
 	"os"
-    "net/url"
 
 	"github.com/ChimeraCoder/anaconda"
 )
