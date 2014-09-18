@@ -9,11 +9,10 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
-	"strings"
+    "net/url"
 
-	"github.com/mrjones/oauth"
+	"github.com/ChimeraCoder/anaconda"
 )
 
 // returns the current implementation version
@@ -21,31 +20,18 @@ func Version() string {
 	return "0.0.1"
 }
 
-const tweetURL string = "https://api.twitter.com/1.1/statuses/user_timeline.json?screen_name=XXXXX&count=1"
 
 // main application
 func main() {
-	c := oauth.NewConsumer(
-		"US55QyDCABM9jjOYG4q4IThde",
-		"xujBz77BlHgkQ0L8ns9WPPiSCL2ixGBd5nx2Timlo8hMO2ml11",
-		oauth.ServiceProvider{
-			RequestTokenUrl:   "http://api.twitter.com/oauth/request_token",
-			AuthorizeTokenUrl: "https://api.twitter.com/oauth/authorize",
-			AccessTokenUrl:    "https://api.twitter.com/oauth/access_token",
-		},
-	)
+    anaconda.SetConsumerKey("US55QyDCABM9jjOYG4q4IThde")
+    anaconda.SetConsumerSecret("xujBz77BlHgkQ0L8ns9WPPiSCL2ixGBd5nx2Timlo8hMO2ml11")
+    api := anaconda.NewTwitterApi("8820492-ru3XP6qzsDIevjbg0YbU2OeBw3kj6P431ixesFhSOG", "Aqh0fmAlZeFUlRWkxzjizkEAieLsCGfkFhKZqgqCpcmBb")
 	arg := os.Args[1:]
-	fmt.Println(len(arg))
-	fmt.Println(strings.Replace(tweetURL, "XXXXX", arg[0], 1))
-	response, err := c.Get(
-		strings.Replace(tweetURL, "XXXXX", arg[0], 1),
-		map[string]string{"count": "1"},
-		"8820492-ru3XP6qzsDIevjbg0YbU2OeBw3kj6P431ixesFhSOG")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer response.Body.Close()
-
-	bits, err := ioutil.ReadAll(response.Body)
-	fmt.Println("The newest item in your home timeline is: " + string(bits))
+    v := url.Values{}
+    v.Set("from", string(arg[0]))
+    v.Set("count", "1")
+    searchResult, _ := api.GetSearch("", v)
+    for _ , tweet := range searchResult {
+        fmt.Println(tweet.Text)
+    }   
 }
