@@ -10,7 +10,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/url"
 	"os"
 
@@ -22,7 +21,7 @@ func Version() string {
 	return "0.0.1"
 }
 
-// Structure for our Config
+// Config is the data structure for our config file
 type Config struct {
 	ConsumerKey    string
 	ConsumerSecret string
@@ -30,30 +29,30 @@ type Config struct {
 	AccessSecret   string
 }
 
-// Builds our config struct
-func getConfig() Config {
-
-	file, _ := os.Open("config.json")
-	contents, _ := ioutil.ReadAll(file)
-
+// LoadConfiguration builds our config struct from a json file.
+func LoadConfiguration(file string) Config {
 	var config Config
-	json.Unmarshal(contents, &config)
-
+	configFile, err := os.Open(file)
+	defer configFile.Close()
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	jsonParser := json.NewDecoder(configFile)
+	jsonParser.Decode(&config)
 	return config
+
 }
 
 // main application
 func main() {
-	config := getConfig()
-	anaconda.SetConsumerKey(config.ConsumerKey)
-	anaconda.SetConsumerSecret(config.ConsumerSecret)
-	api := anaconda.NewTwitterApi(config.AccessToken, config.AccessSecret)
+	config := LoadConfiguration("config.json")
+	api := anaconda.NewTwitterApiWithCredentials(config.AccessToken, config.AccessSecret, config.ConsumerKey, config.ConsumerSecret)
 	arg := os.Args[1:]
 	v := url.Values{}
 	v.Set("from", string(arg[0]))
 	v.Set("count", "1")
 	searchResult, _ := api.GetSearch("", v)
-	for _, tweet := range searchResult {
+	for _, tweet := range searchResult.Statuses {
 		fmt.Println(tweet.Text)
 	}
 }
